@@ -20,7 +20,8 @@ router.post("/", (req, res) => {
     id: Date.now(),
     title,
     content,
-    userId
+    userId,
+    sharedWith: [] 
   };
 
   notes.push(newNote);
@@ -31,11 +32,23 @@ router.post("/", (req, res) => {
   });
 });
 
+  router.get("/", (req, res) => {
+    const userId = Number(req.query.userId);
 
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID query param required"
+      });
+    }
 
-router.get("/", (req, res) => {
-  res.json(notes);
-});
+    const accessibleNotes = notes.filter(note =>
+      note.userId === userId ||
+      note.sharedWith.includes(userId)
+    );
+
+    res.json(accessibleNotes);
+  });
+
 
 
 router.get("/:id", (req, res) => {
@@ -52,5 +65,37 @@ router.get("/:id", (req, res) => {
   res.json(note);
 });
 
+  router.post("/:id/share", (req, res) => {
+    const noteId = Number(req.params.id);
+    const { userIdToShare } = req.body;
+
+    const note = notes.find(n => n.id === noteId);
+
+    if (!note) {
+      return res.status(404).json({
+        message: "Note not found"
+      });
+    }
+
+    if (!userIdToShare) {
+      return res.status(400).json({
+        message: "User ID to share is required"
+      });
+    }
+
+    // Prevent duplicate sharing
+    if (note.sharedWith.includes(userIdToShare)) {
+      return res.status(400).json({
+        message: "Note already shared with this user"
+      });
+    }
+
+    note.sharedWith.push(userIdToShare);
+
+    res.json({
+      message: "Note shared successfully",
+      note
+    });
+  });
 
 export default router;
