@@ -1,101 +1,45 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
-
+const JWT_SECRET = "your_super_secret_key";
 
 let notes: any[] = [];
 
 
-router.post("/", (req, res) => {
-  const { title, content, userId } = req.body;
+const authMiddleware = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "No token provided" });
 
-  
-  if (!title || !content || !userId) {
-    return res.status(400).json({
-      message: "All fields are required"
-    });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
   }
+};
 
-  const newNote = {
-    id: Date.now(),
-    title,
-    content,
-    userId,
-    sharedWith: [] 
-  };
 
+router.post("/", authMiddleware, (req: any, res: any) => {
+  const { title, content } = req.body;
+  const userId = req.userId;
+
+  if (!title || !content) return res.status(400).json({ message: "All fields required" });
+
+  const newNote = { id: Date.now(), title, content, userId, sharedWith: [] };
   notes.push(newNote);
 
-  res.json({
-    message: "Note created successfully",
-    note: newNote
-  });
+  res.json({ message: "Note created successfully", note: newNote });
 });
 
-  router.get("/", (req, res) => {
-    const userId = Number(req.query.userId);
-
-    if (!userId) {
-      return res.status(400).json({
-        message: "User ID query param required"
-      });
-    }
-
-    const accessibleNotes = notes.filter(note =>
-      note.userId === userId ||
-      note.sharedWith.includes(userId)
-    );
-
-    res.json(accessibleNotes);
-  });
-
-
-
-router.get("/:id", (req, res) => {
-  const noteId = Number(req.params.id);
-
-  const note = notes.find(n => n.id === noteId);
-
-  if (!note) {
-    return res.status(404).json({
-      message: "Note not found"
-    });
-  }
-
-  res.json(note);
+router.get("/", authMiddleware, (req: any, res: any) => {
+  const userId = req.userId;
+  const accessibleNotes = notes.filter(note =>
+    note.userId === userId || note.sharedWith.includes(userId)
+  );
+  res.json(accessibleNotes);
 });
-
-  router.post("/:id/share", (req, res) => {
-    const noteId = Number(req.params.id);
-    const { userIdToShare } = req.body;
-
-    const note = notes.find(n => n.id === noteId);
-
-    if (!note) {
-      return res.status(404).json({
-        message: "Note not found"
-      });
-    }
-
-    if (!userIdToShare) {
-      return res.status(400).json({
-        message: "User ID to share is required"
-      });
-    }
-
-    // Prevent duplicate sharing
-    if (note.sharedWith.includes(userIdToShare)) {
-      return res.status(400).json({
-        message: "Note already shared with this user"
-      });
-    }
-
-    note.sharedWith.push(userIdToShare);
-
-    res.json({
-      message: "Note shared successfully",
-      note
-    });
-  });
 
 export default router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 function App() {
   const [notes, setNotes] = useState<any[]>([]);
@@ -6,10 +6,17 @@ function App() {
   const [content, setContent] = useState("");
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userId, setUserId] = useState<number | null>(null); 
+  const [password, setPassword] = useState(""); 
+
+  const [token, setToken] = useState<string | null>(null);
 
   const backendUrl = "http://localhost:3000";
+
+useEffect(() => {
+  if (token) {
+    fetchNotes();
+  }
+}, [token]);
 
   // Signup
   const signup = async () => {
@@ -25,56 +32,69 @@ function App() {
 
   // Login
 
-  const login = async () => {
-    const res = await fetch(`${backendUrl}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
+const login = async () => {
+  const res = await fetch("http://localhost:3000/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
 
-    if (data.userId) {
-      setUserId(data.userId);
-      fetchNotes(data.userId);
-      alert(data.message);
-    } else {
-      alert(data.message);
-    }
-  };
+  const data = await res.json();
 
+  if (data.token) {
+    setToken(data.token);
+    alert("Login successful!");
+  } else {
+    alert(data.message);
+  }
+};
 
   // Fetch notes
-  const fetchNotes = async (uid: number) => {
-    const res = await fetch(`${backendUrl}/notes?userId=${uid}`);
-    const data = await res.json();
-    setNotes(data);
-  };
+
+const fetchNotes = async () => {
+  if (!token) return;
+
+  const res = await fetch(`${backendUrl}/notes`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  const data = await res.json();
+  setNotes(data);
+};
 
   
   // Create note
  
-  const createNote = async () => {
-    if (!userId) {
-      alert("You must be logged in!");
-      return;
-    }
+const createNote = async () => {
+  if (!token) return alert("You must be logged in!");
 
-    await fetch(`${backendUrl}/notes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, userId })
-    });
+  await fetch(`${backendUrl}/notes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      title,
+      content
+    })
+  });
 
-    setTitle("");
-    setContent("");
-    fetchNotes(userId);
-  };
+  setTitle("");
+  setContent("");
+
+  fetchNotes();
+};
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Collaborative Notes</h1>
 
-      {!userId && (
+      {!token && (
         <>
           <h2>Signup / Login</h2>
           <input
@@ -95,7 +115,7 @@ function App() {
         </>
       )}
 
-      {userId && (
+      {token && (
         <>
           <h2>Create Note</h2>
           <input

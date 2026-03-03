@@ -1,8 +1,9 @@
 import express from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
-
+const JWT_SECRET = "your_super_secret_key"; 
 
 let users: any[] = [];
 
@@ -10,55 +11,30 @@ let users: any[] = [];
 router.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  
   const existingUser = users.find(u => u.email === email);
+  if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-  if (existingUser) {
-    return res.status(400).json({
-      message: "User already exists"
-    });
-  }
-
-  
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = {
-    id: Date.now(),
-    email,
-    password: hashedPassword
-  };
-
+  const user = { id: Date.now(), email, password: hashedPassword };
   users.push(user);
 
-  res.json({
-    message: "User created successfully"
-  });
+  res.json({ message: "User created successfully" });
 });
 
 // LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   const user = users.find(u => u.email === email);
 
-  if (!user) {
-    return res.status(400).json({
-      message: "User not found"
-    });
-  }
+  if (!user) return res.status(400).json({ message: "User not found" });
 
   const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-  if (!isMatch) {
-    return res.status(400).json({
-      message: "Invalid password"
-    });
-  }
+  // Create JWT
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.json({
-    message: "Login successful",
-    userId: user.id
-  });
+  res.json({ message: "Login successful", token });
 });
 
 export default router;
