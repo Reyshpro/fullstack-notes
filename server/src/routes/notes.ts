@@ -1,12 +1,11 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import prisma from "../prisma";
 
 const router = express.Router();
 const JWT_SECRET = "your_super_secret_key";
 
-let notes: any[] = [];
-
-
+// Auth middleware
 const authMiddleware = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "No token provided" });
@@ -21,25 +20,45 @@ const authMiddleware = (req: any, res: any, next: any) => {
   }
 };
 
-
-router.post("/", authMiddleware, (req: any, res: any) => {
+// CREATE NOTE
+router.post("/", authMiddleware, async (req: any, res: any) => {
   const { title, content } = req.body;
   const userId = req.userId;
 
-  if (!title || !content) return res.status(400).json({ message: "All fields required" });
+  if (!title || !content) {
+    return res.status(400).json({ message: "All fields required" });
+  }
 
-  const newNote = { id: Date.now(), title, content, userId, sharedWith: [] };
-  notes.push(newNote);
+  try {
+    const newNote = await prisma.note.create({
+      data: {
+        title,
+        content,
+        userId,
+      },
+    });
 
-  res.json({ message: "Note created successfully", note: newNote });
+    res.json({ message: "Note created successfully", note: newNote });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-router.get("/", authMiddleware, (req: any, res: any) => {
+// GET NOTES
+router.get("/", authMiddleware, async (req: any, res: any) => {
   const userId = req.userId;
-  const accessibleNotes = notes.filter(note =>
-    note.userId === userId || note.sharedWith.includes(userId)
-  );
-  res.json(accessibleNotes);
+
+  try {
+    const notes = await prisma.note.findMany({
+      where: { userId },
+    });
+
+    res.json(notes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 export default router;
