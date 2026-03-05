@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import prisma from "../prisma";
+import { prisma } from "../prisma";
 
 const router = express.Router();
 const JWT_SECRET = "your_super_secret_key";
