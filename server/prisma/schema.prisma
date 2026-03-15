@@ -8,16 +8,26 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  password String
-  notes    Note[]
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
+  password      String
+  notes         Note[]
+  sharedWithMe  SharedNote[] @relation("SharedWithUser")
 }
 
 model Note {
-  id      Int    @id @default(autoincrement())
-  title   String
-  content String
-  userId  Int
-  user    User   @relation(fields: [userId], references: [id])
+  id          Int          @id @default(autoincrement())
+  title       String
+  content     String
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  sharedWith  SharedNote[]
+}
+
+model SharedNote {
+  id              Int    @id @default(autoincrement())
+  noteId          Int
+  sharedWithEmail String
+  note            Note   @relation(fields: [noteId], references: [id])
+  sharedWithUser  User?  @relation("SharedWithUser", fields: [sharedWithEmail], references: [email])
 }

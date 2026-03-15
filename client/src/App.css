@@ -359,31 +359,31 @@ body::before {
   cursor: pointer;
   transition: all 0.18s;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
-
 .note-item::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: -1px;       
+  top: -1px;
+  bottom: -1px;
   width: 3px;
   background: var(--amber);
-  transform: scaleY(0);
+  transform: scaleX(0);
+  transform-origin: left;
   transition: transform 0.2s;
-  border-radius: 0 2px 2px 0;
+  border-radius: 10px 0 0 10px;
 }
 
+.note-item:hover::before,
+.note-item.active::before {
+  transform: scaleX(1);
+}
 .note-item:hover {
   background: var(--ink-mid);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.note-item:hover::before,
-.note-item.active::before {
-  transform: scaleY(1);
-}
 
 .note-item.active {
   background: var(--ink-mid);
@@ -568,4 +568,135 @@ body::before {
   .sidebar        { width: 100%; }
   .header         { padding: 1.25rem 1.5rem; }
   .auth-headline  { font-size: 2rem; }
+}
+
+.tab-row {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.18s;
+  letter-spacing: 0.04em;
+}
+
+.tab-btn.active {
+  background: var(--amber);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.tab-btn:hover:not(.active) {
+  background: var(--ink-mid);
+  color: var(--paper);
+}
+
+.badge {
+  background: var(--red);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  font-family: 'DM Mono', monospace;
+}
+
+
+.share-btn {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  transition: all 0.18s;
+}
+
+.share-btn:hover {
+  background: var(--amber);
+  color: var(--ink);
+  border-color: transparent;
+}
+
+.share-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.share-form input {
+  flex: 1;
+  font-size: 0.78rem;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: var(--ink-mid);
+  color: var(--paper);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.share-form input:focus {
+  border-color: var(--amber);
+}
+
+
+.collab-editor {
+  min-height: 320px;
+  resize: vertical;
+}
+
+.collab-badge {
+  color: var(--green);
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.collab-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+  display: inline-block;
+}
+
+.note-view-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.save-hint {
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
 }
